@@ -17,7 +17,7 @@ func init() {
 	listCmd.Flags().BoolVarP(&desc, "desc", "d", false, "Sort type [ticket,name,date]")
 }
 
-var sort string
+var sort string = "date"
 var desc bool
 var name string = ""
 
@@ -27,17 +27,6 @@ var listCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		db := database.Open()
-
-		switch sort {
-		case "ticket":
-			sort = "ticket"
-		case "name":
-			sort = "name"
-		case "date":
-			sort = "createdAt"
-		default:
-			sort = "ticket"
-		}
 
 		if len(args) != 0 {
 			name = args[0]
@@ -51,31 +40,34 @@ var listCmd = &cobra.Command{
 func listAll(db *sql.DB) {
 	var ticket database.Ticket
 
-	query := "SELECT * FROM tickets WHERE name='fauna'"
+	query := "SELECT * FROM tickets"
+	if name != "" {
+		query += fmt.Sprintf(" WHERE name ='%s'", name)
 
-	// query += " ORDER BY ?"
-	// if desc {
-	//
-	// 	query += " DESC"
-	//
-	// }
+	}
+
+	query += " ORDER BY ?"
+	if desc {
+
+		query += " DESC"
+	}
+
 	statment, err := db.Prepare(query)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println(query)
-	rows, err := statment.Query()
+	rows, err := statment.Query(sort)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err := rows.Scan(&ticket.ID, &ticket.Name, &ticket.Ticket, &ticket.CreatedAt)
+		err := rows.Scan(&ticket.ID, &ticket.Ticket, &ticket.Name, &ticket.Date)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("%d: %d %s     %s\n", ticket.ID, ticket.Ticket, ticket.Name, ticket.CreatedAt)
+		fmt.Printf("%d: %d %s  %s\n", ticket.ID, ticket.Ticket, ticket.Name, ticket.Date)
 	}
 
 	err = rows.Err()

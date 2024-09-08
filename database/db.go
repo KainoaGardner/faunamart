@@ -24,12 +24,7 @@ func Open() *sql.DB {
 }
 
 func createTable(db *sql.DB) {
-	createTableSQL := `CREATE TABLE IF NOT EXISTS tickets (
-  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  ticket INTEGER NOT NULL,
-  name text NOT NULL,
-  createdAt DATETIME NOT NULL DEFAULT current_timestamp
-  );`
+	createTableSQL := `CREATE TABLE IF NOT EXISTS tickets (id INTEGER NOT NULL PRIMARY KEY, ticket INTEGER NOT NULL, name VARCHAR(30) NOT NULL,created DATE DEFAULT (datetime('now')));`
 	statment, err := db.Prepare(createTableSQL)
 	if err != nil {
 		log.Fatal("Error making database", err)
